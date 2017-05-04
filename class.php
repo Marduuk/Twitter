@@ -1,7 +1,7 @@
 <?php
 
 //trzymaj to w pliku src ale to pozniej teraz koduje :3 IMPORTANT slajd 13 
-
+require('connect.php');
 class User {
 
     private $id;
@@ -34,7 +34,9 @@ class User {
     public function getEmail() {
         return $this->email;
     }
-
+    public function getId() {
+        return $this->id;
+    }
     public function setPassword($newPassword) {
         $newHashedPassword = password_hash($newPassword, PASSWORD_BCRYPT);
         $this->hashedPassword = $newHashedPassword;
@@ -67,9 +69,9 @@ class User {
         $result = $connection->query($sql);
 
         if ($result == true && $result->num_rows == 1) {
-            var_dump($result);
+           
             $row = $result->fetch_assoc();
-            var_dump($row);
+            
             $loadedUser = new User();
             $loadedUser->id = $row['id'];
             $loadedUser->username = $row['username'];
@@ -103,7 +105,7 @@ class User {
 
     public function delete(mysqli $connection) {
         if ($this->id != -1) {
-            $sql = "DELETE FROM Users WHERE id=$this->id";
+            $sql = "DELETE FROM users WHERE id=$this->id";//id w funkcji i usunac this 'winno ino dzialac mocium panie!
             $result = $connection->query($sql);
             if ($result == true) {
                 $this->id = -1;
@@ -112,6 +114,20 @@ class User {
             return false;
         }
         return true;
+    }
+   static public function IdNameSwitch($connection,$idOrUname){
+        if(is_numeric($idOrUname)){           
+            $user=User::loadUserById($connection,$idOrUname); //zmiana usera na idka
+            return $user->getUsername();
+        }
+        if(is_string($idOrUname)){
+            $sql = "SELECT id FROM users WHERE username='$idOrUname'";
+            $result = $connection->query($sql);
+                if ($result == true) {
+                    $row = mysqli_fetch_array($result);
+                     return $row['id'];                     
+            }
+        }
     }
 }
 
@@ -125,7 +141,7 @@ class Tweet{
     
     public function __construct() {
     $this->id = -1;
-    $this->user_id = "";
+    $this->userid = "";
     $this->text = "";
     $this->creationDate = "";
     }
@@ -179,7 +195,7 @@ class Tweet{
     }
     static public function loadAllTweetsByUserId(mysqli $connection,$userid){
         
-                $sql = "SELECT * FROM tweet WHERE id=$userid";
+        $sql = "SELECT * FROM tweet WHERE id=$userid";
         $ret = [];
         $result = $connection->query($sql);
         var_dump($result);
@@ -229,3 +245,6 @@ class Tweet{
     }
     
 }
+
+
+

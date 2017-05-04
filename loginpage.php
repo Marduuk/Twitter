@@ -1,4 +1,5 @@
 <?php
+session_start();
 require("connect.php");
 
 function loggValidate(mysqli $connection,$emailINP,$passwordINP){
@@ -9,17 +10,20 @@ function loggValidate(mysqli $connection,$emailINP,$passwordINP){
         $passVeryfiy=password_verify($passwordINP ,$result['hashed_password'] );
             if($passVeryfiy==true && $result['email']!=null) {
                 header('Location: indeksik.php');
+                $_SESSION['loggedin'] = $result['id'];
+                return true;
             }
             else{
                 echo "nie udalo sie zalogowac";
+                return false;
             }
     
 }
     if($_SERVER['REQUEST_METHOD'] =="POST"){
         $emailINP=$_POST['email'];
         $passwordINP=$_POST['password'];
-        
         loggValidate($connection,$emailINP,$passwordINP);
+
         /*
         $sql="SELECT * FROM users WHERE email='$emailINP'";
         
