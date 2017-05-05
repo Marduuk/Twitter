@@ -3,12 +3,12 @@ session_start();
 if ($_SESSION['loggedin'] != null && is_numeric($_SESSION['loggedin'])) {
     
 } else {
-    header('Location: loginpage.php');
+    header('Location: login_page.php');
 }
 require('connect.php');
-require('class.php');
-require('commentclass.php');
-
+require('src/Tweet_class.php');
+require('src/User_class.php');
+require('src/Comment_class.php');
 ?>
 <!doctype html>
 <html lang="en">
@@ -20,145 +20,77 @@ require('commentclass.php');
         <title>Twitterek</title>
     </head>
     <body>
+        <a href="logg_out.php">Wyloguj<a/>
+            <br><br>
+            <a href='messages_page.php'>przejdz do wiadomosci</a><br><br>
+            <a href='your_page.php'>przejdz na swoja strone</a><br><br>
+            Tweetnij!
+            <form action='indeksik.php' method='post'>
+                <input type='text' name='tweet' maxlength="140">
+                <button type='submit' value='TweetUp' name='sub'>Tweet it</button><br><br><br>
+            </form>
+            <?php
+            $tweetNum = count(Tweet::loadAllTweets($connection));
 
-        Tweetnij!
-         <form action='indeksik.php' method='post'>
-             <input type='text' name='tweet'>
-             <button type='submit' value='TweetUp' name='sub'>Tweet it</button><br>
-         </form>
-<?php
-    $tweetNum=count(Tweet::loadAllTweets($connection));
-             
-        if ($_SERVER['REQUEST_METHOD'] == "POST") { 
-            switch($_POST['sub']){
-            case 'TweetUp':
-                        
-                $tweetToSave= new Tweet();
-                $ActDate=new DateTime();    
-                $tweetToSave->setText($_POST['tweet']);
-                $tweetToSave->setUserid($_SESSION['loggedin']);
-                $tweetToSave->setCreationDate(($ActDate ->format('Y-m-d')));
-        
-                $tweetToSave-> saveToDB($connection);
-            break;
-           
-            case is_numeric($_POST['sub']):
-                $comment=new Comment();
-                $comment->setUserid($_SESSION['loggedin']);
-                $comment-> setCommentId($_POST['sub']);
-                $comment-> setText($_POST['comment']);
-                $ActDate=new DateTime();
-                $comment->setCreationDate(($ActDate ->format('Y-m-d')));
-                
-                $comment->saveToDB($connection);
-            break;    
-            }  
-        }
- 
-        
-        /*
-        $hm=new Comment();
-        $hm ->loadAllCommentsByPostId($connection,4);
-        var_dump($hm);
-        $comm= Comment::loadAllCommentsByPostId($connection,4);
+            if ($_SERVER['REQUEST_METHOD'] == "POST") {
+                switch ($_POST['sub']) {
+                    case 'TweetUp':
 
-        var_dump($comm); */
-        $kek = Tweet::loadAllTweets($connection);
-       
-    echo "<table border='1px solid black'>";
-        foreach ($kek as $innerObTweet) {
-            $res = $innerObTweet->getText();
-            $res1 = User::loadUserById($connection, $innerObTweet->getUserid());
-            $res1 = $res1->getUsername();
-            echo "<tr><td>" . $res . "</td><td>  " . $res1 . "</td></tr>";
-     
-            $comm=Comment::loadAllCommentsByPostId($connection,($innerObTweet->getId()));
-                    
-              if($comm!=null){
-                foreach($comm as $row){
-               
-                $thisUser=User::loadUserById($connection,$row->getUserid());                                
-                   echo "<tr><td>".$thisUser->getUsername(). ":  ".   $row->getText() ."</td></tr>";                        
-                }                 
-              }
-                echo "<tr><td>"
-              . "<form action='indeksik.php' method='post'> "
-              . "<input type='text' name='comment'>"
-             // . "<input type='submit' value='Komentuj!'>"
-              . "<button type='submit' value=".$innerObTweet->getId()." name='sub'>Komentuj</button>"
-              . "</form>"
-              . "</td></tr>";
+                        $tweetToSave = new Tweet();
+                        $ActDate = new DateTime();
+                        $tweetToSave->setText($_POST['tweet']);
+                        $tweetToSave->setUserid($_SESSION['loggedin']);
+                        $tweetToSave->setCreationDate(($ActDate->format('Y-m-d h:i:s')));
+                        $tweetToSave->saveToDB($connection);
+                        break;
+
+                    case is_numeric($_POST['sub']):
+                        $comment = new Comment();
+                        $comment->setUserid($_SESSION['loggedin']);
+                        $comment->setCommentId($_POST['sub']);
+                        $comment->setText($_POST['comment']);
+                        $ActDate = new DateTime();
+                        $comment->setCreationDate(($ActDate->format('Y-m-d h:i:s')));
+                        $comment->saveToDB($connection);
+                        break;
                 }
+            }
+            
 
-        echo "</table>"; //sort by creation date
-        
-        
-        ?>
+            $allTweets = Tweet::loadAllTweets($connection);
+
+            echo "<table border='1px solid black'>";
+            foreach ($allTweets as $innerObTweet) {
+                $res = $innerObTweet->getText();
+                $res1 = User::loadUserById($connection, $innerObTweet->getUserid());
+                $res1 = $res1->getUsername();
+                echo "<tr><td>" . $res . "</td><td>  " . "<a href='user_page.php?Username=$res1'>$res1</a>" . "</td></tr>";
+                $comm = Comment::loadAllCommentsByPostId($connection, ($innerObTweet->getId()));
+                if ($comm != null) {
+                    foreach ($comm as $row) {
+
+                        $thisUser = User::loadUserById($connection, $row->getUserid());
+                        $thisUname = $thisUser->getUsername();
+                        echo "<tr><td>" . "<a href='user_page.php?Username=$thisUname'>$thisUname</a>" . ":  " . $row->getText() . "</td></tr>";
+                    }
+                }
+                echo "<tr><td>"
+                . "<form action='indeksik.php' method='post'> "
+                . "<input type='text' name='comment' maxlength='60'>"
+                . "<button type='submit' value=" . $innerObTweet->getId() . " name='sub'>Komentuj</button>"
+                . "</form>"
+                . "</td></tr>";
+            }
+
+            echo "</table>"; 
+            ?>
     </body>
-    </html>
+</html>
 
 
 
-        <?php
-        $connection->close();
-        $connection = null;
-        
+<?php
+$connection->close();
+$connection = null;
 
-/*
-  $users=User::loadAllUsers($connection);
-  var_dump($users);
-  $user1 ->setUsername("Honoratka");
-
-  $user1 -> saveToDB($connection);
- */
-/*
-  if($user1 ->delete($connection)){
-  echo "uzytkownik usuniety";
-  }
-  else{
-  echo "nie usunieto";
-  }
-
- */
-/*
-  $user1 = User::loadUserByID($connection,1);
-  var_dump($user1);
- */
-
-/*
-  $user1= new User();
-
-  $user1->setUsername("test");
-  $user1->setEmail("test@test.test");
-  $user1->setPassword('test');
-
-
-  $user1 ->saveToDB($connection);
- */
-/*
-  $users=User::loadAllUsers($connection);
-  var_dump($users);
- */
-/*
-  $res=Tweet::loadTweetById($connection,1);
-  var_dump($res);
-  echo "<hr>";
-
-  $lol=Tweet::loadAllTweetsByUserId($connection,2);
-  var_dump($lol);
-  echo "<hr>";
-  $kek=Tweet::loadAllTweets($connection);
-  var_dump($kek);
-
-
-  $ActualTime= new DateTime();
-
-
-  $tweet= new Tweet($connection);
-  $tweet ->setText("Bogurodzica dzieeewicaaaaaaaaa");
-  $tweet ->setUserid(4);
-  $tweet ->setCreationDate($ActualTime ->format('Y-m-d'));
-
-  $tweet -> saveToDB($connection);
- */
- ?>
+?>

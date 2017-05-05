@@ -7,34 +7,33 @@ if ($_SESSION['loggedin'] != null && is_numeric($_SESSION['loggedin'])) {
 }
 
 require('connect.php');
-require('messclass.php');
-require('class.php');
+require('src/Message_class.php');
+require('src/Tweet_class.php');
+require('src/User_class.php');
 
 
-
-
-if($_SERVER['REQUEST_METHOD']=='GET'){ // w sumie nie musze uzywac geta bo jezeli zrobie require to nadal mam wartosc, ale w sumie wiem co bylo klykniete!
-   $sender=$_GET['senderId'];
-   echo $sender;
-   $messId=$_GET['MessageId'];   
-   Message::updateMessageById($connection,$messId);   
+if ($_SERVER['REQUEST_METHOD'] == 'GET' && !isset($_GET['UnameFromUserPage'])) {
+    $sender = $_GET['senderId'];
+    $messId = $_GET['MessageId'];
+    Message::updateMessageById($connection, $messId);
+    echo Message::loadMessageById($connection, $messId)->getText();
 }
-if($_SERVER['REQUEST_METHOD']=='POST'){
-    if($_POST['rec']==$_SESSION['loggedin']){
-        echo "Gratulujemy masz rozdwojenie jazni!";
-        return false;
+
+$loggedName = User::IdNameSwitch($connection, $_SESSION['loggedin']);
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if ($_POST['rec'] == $loggedName) {
+        echo "error nie mozna ze soba mailowac";
+        
+    } else {
+        $id = User::IdNameSwitch($connection, $_POST['rec']);
+        $MessToSend = new Message();
+        $MessToSend->setRecId($id);
+        $MessToSend->setSendId($_SESSION['loggedin']);
+        $MessToSend->setText($_POST['text']);
+        $MessToSend->saveToDB($connection);
     }
-
-    $id= User::IdNameSwitch($connection,$_POST['rec']);
-      
-    $MessToSend= new Message();
-    $MessToSend->setRecId($id);
-    $MessToSend->setSendId($_SESSION['loggedin']);
-    $MessToSend->setText($_POST['text']);
-    $MessToSend->saveToDB($connection);
-    
 }
-
 ?>
 <!doctype html>
 <html lang="en">
@@ -47,12 +46,17 @@ if($_SERVER['REQUEST_METHOD']=='POST'){
     </head>
     <body>
         <form method='post' action=''>
-           Odbiorca<br>
-           <input type='text' name='rec'><br><br>
-           Tresc<br>
+            Odbiorca<br>
+            <input type='text' name='rec' value="<?php
+if (isset($_GET['UnameFromUserPage'])) {
+    echo $_GET['UnameFromUserPage'];
+}
+?>">
+            <br><br>
+            Tresc<br>
             <textarea rows="4" cols="45" name='text'></textarea> 
             <input type='submit' value='Wyslij'>
         </form>
-        
+
     </body>
 </html>

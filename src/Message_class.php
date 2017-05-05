@@ -1,6 +1,5 @@
 <?php
 require('connect.php');
-
 class Message{
     private $id;
     private $recId;
@@ -146,22 +145,7 @@ class Message{
         }
    
 }
-/*
-$vivat=new Message();
-$vivat->setRecId(6);
-$vivat->setSendId(3);
-$vivat->setText('nie tedst');
 
-
-var_dump($vivat);
-$vivat->saveToDB($connection);
-*/
-
-//$check=Message::loadAllReceivedMessagesByUserId($connection,6);
-//var_dump($check);
-
-//$check=Message::loadMessageById($connection,20);
-//var_dump($check);
 
  
  

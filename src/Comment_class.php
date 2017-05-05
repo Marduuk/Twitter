@@ -56,9 +56,7 @@ class Comment{
         $result = $connection->query($sql);
 
         if ($result == true && $result->num_rows == 1) {
-            var_dump($result);
             $row = $result->fetch_assoc();
-            var_dump($row);
             $loadedTweet = new Comment();
             $loadedTweet->id = $row['id'];
             $loadedTweet->userid = $row['user_id'];
@@ -111,17 +109,4 @@ class Comment{
 }
 
 
-//$res=Comment::loadCommentById($connection,1);
-//$res=Comment::loadAllCommentsByPostId($connection,4);
-//var_dump($res);
 
-/*
-$com=new Comment();
-$com->setUserid(4);
-$com->setCommentId(4);
-$com->setCreationDate('2017-11-11');
-$com->setText('Hakuna Matata, jak check check to brzmi');
-var_dump($com);
-$com->saveToDB($connection);
-*/
-        
